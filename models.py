@@ -4,7 +4,9 @@ from datetime import datetime
 
 from sqlalchemy import create_engine, Integer, String, DateTime, func, ForeignKey, insert
 from sqlalchemy.orm import sessionmaker, DeclarativeBase, Mapped, mapped_column, foreign
-from sqlalchemy.testing.suite.test_reflection import users
+from flask_login import UserMixin
+
+from auth import hash_password
 
 POSTGRES_USER = os.getenv("POSTGRES_USER", "postgres")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "123")
@@ -19,17 +21,31 @@ Session = sessionmaker(bind=engine)
 class Base(DeclarativeBase):
     pass
 
-class User(Base):
+class User(UserMixin, Base):
     __tablename__ = "user"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     email: Mapped[str] = mapped_column(String, nullable=False, unique=True)
     password: Mapped[str] = mapped_column(String, nullable=False)
 
+    @property
+    def dict(self):
+        return {
+            "id": self.id,
+            "email": self.header,
+            "password": self.password
+        }
+
+    @property
+    def id_dict(self):
+        return {
+            "id": self.id
+        }
+
 
 class Advertisement(Base):
     __tablename__ = "advertisement"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    header: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    header: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str] = mapped_column(String)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"))
@@ -53,8 +69,8 @@ class Advertisement(Base):
 if __name__ == "__main__":
     Base.metadata.create_all(bind=engine)
 
-    stmt1 = insert(User).values(email="<EMAIL1>", password="<PASSWORD1>")
-    stmt2 = insert(User).values(email="<EMAIL2>", password="<PASSWORD2>")
+    stmt1 = insert(User).values(email="<EMAIL1>", password=hash_password("<PASSWORD1>"))
+    stmt2 = insert(User).values(email="<EMAIL2>", password=hash_password("<PASSWORD2>"))
 
     with engine.connect() as conn:
         conn.execute(stmt1)
