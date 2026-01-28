@@ -10,8 +10,8 @@ from auth import hash_password
 
 POSTGRES_USER = os.getenv("POSTGRES_USER", "postgres")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "123")
-POSTGRES_HOST = os.getenv("POSTGRES_HOST", "127.0.0.1")
-POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5431")
+POSTGRES_HOST = os.getenv("POSTGRES_HOST", "db")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
 POSTGRES_DB = os.getenv("POSTGRES_DB", "netology_advertisements")
 
 PG_DSN = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
@@ -31,7 +31,7 @@ class User(UserMixin, Base):
     def dict(self):
         return {
             "id": self.id,
-            "email": self.header,
+            "email": self.email,
             "password": self.password
         }
 

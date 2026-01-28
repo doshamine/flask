@@ -90,4 +90,5 @@ advertisement_view = AdvertisementView.as_view("advertisement_view")
 app.add_url_rule("/api/v1/advertisement/", view_func=advertisement_view, methods=["POST"])
 app.add_url_rule("/api/v1/advertisement/<int:adv_id>", view_func=advertisement_view, methods=["GET", "PATCH", "DELETE"])
 
-app.run()
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, threaded=True)

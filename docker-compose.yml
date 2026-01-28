@@ -1,9 +1,30 @@
 services:
-  postgres:
+  db:
     image: postgres:latest
+    expose:
+      - "5432"
+    env_file: "db.env"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      start_period: 5s
+      start_interval: 1s
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    networks:
+      - default
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: "service_healthy"
     ports:
-      - "5431:5432"
-    volumes:
-      - .:/docker-entrypoint-initdb.d
-    env_file:
-      - db.env
+      - "5000:5000"
+    stdin_open: true
+    tty: true
+    networks:
+      - default
+
+networks:
+  default:
