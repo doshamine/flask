@@ -1,0 +1,268 @@
+openapi: 3.0.3
+
+info:
+  title: Advertisement Service API
+  description: 'API для работы с доской объявлений'
+  version: 0.0.1
+
+paths:
+  /login:
+    post:
+      tags:
+        - auth
+      description: Авторизация пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: '<EMAIL>'
+                password:
+                  type: integer
+                  example: '<PASSWORD>'
+              required:
+                - email
+                - password
+      responses:
+        200:
+          description: Успешная авторизация
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: 'Logged in successfully'
+        400:
+          description: Не указаны необходимые данные
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: 'Email is not provided'
+        401:
+          description: Такой пользователь не зарегистрирован
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: 'Invalid credentials'
+  /logout:
+    post:
+      tags:
+        - auth
+      description: Выход пользователя из сессии
+      responses:
+        200:
+          description: Успешный выход
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: 'Logged out'
+        401:
+          description: Пользователь не был авторизован
+  /advertisement:
+    post:
+      tags:
+        - advertisement
+      description: Создание объявления
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                header:
+                  type: string
+                  example: 'заметка'
+                description:
+                  type: string
+                  example: 'важная'
+              required:
+                - header
+      responses:
+        201:
+          description: Успешное создание
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdvertisementId'
+        400:
+          description: Не указаны необходимые данные
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: 'Header is required'
+        401:
+          description: Пользователь не авторизован
+  /advertisement/{adv_id}:
+    get:
+      tags:
+        - advertisement
+      description: Получение объявления по ID
+      parameters:
+        - in: path
+          name: advertisementId
+          schema:
+            type: integer
+          required: true
+          description: ID запрашиваемого объявления
+      responses:
+        200:
+          description: Успешная обработка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Advertisement'
+        404:
+          description: Такого объявления нет
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+    patch:
+      tags:
+        - advertisement
+      description: Изменение объявления по ID
+      parameters:
+        - in: path
+          name: advertisementId
+          schema:
+            type: integer
+          required: true
+          description: ID изменяемого объявления
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                header:
+                  type: string
+                  example: "ЗАМЕТКА"
+                description:
+                  type: string
+                  example: "очень важная"
+              required:
+                - header
+      responses:
+        201:
+          description: Успешное изменение объявления
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdvertisementId'
+        401:
+          description: Пользователь не авторизован
+        403:
+          description: Недостаточно прав
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NoPermission'
+        404:
+          description: Такого объявления нет
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+    delete:
+      tags:
+        - advertisement
+      description: Удаление объявления по ID
+      parameters:
+        - in: path
+          name: advertisementId
+          schema:
+            type: integer
+          required: true
+          description: ID удаляемого объявления
+      responses:
+        204:
+          description: Объявление успешно удалено
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+        401:
+          description: Пользователь не авторизован
+        403:
+          description: Недостаточно прав
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NoPermission'
+        404:
+          description: Такого объявления нет
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    Advertisement:
+      type: object
+      properties:
+        header:
+          type: string
+          example: 'заметка'
+        description:
+          type: string
+          example: 'важная'
+        created_at:
+          type: string
+          format: date-time
+        user_id:
+          type: integer
+          example: 1
+    AdvertisementId:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+    NoPermission:
+      type: object
+      properties:
+        error:
+          type: string
+          example: 'no permission'
+    NotFound:
+      type: object
+      properties:
+        error:
+          type: string
+          example: 'advertisement not found'

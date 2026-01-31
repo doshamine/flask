@@ -2,7 +2,8 @@ from flask import Flask, jsonify, request, Response
 from flask.views import MethodView
 from models import Advertisement, Session, User
 from auth import check_password
-from flask_login import LoginManager, login_user, login_required, current_user
+from flask_login import LoginManager, login_user, login_required, \
+                        current_user, logout_user
 from sqlalchemy import select
 import secrets
 app = Flask("app")
@@ -27,13 +28,28 @@ def load_user(user_id):
 
 @app.route('/api/v1/login/', methods=['POST'])
 def login():
-    session = Session()
-    user = session.execute(select(User).filter_by(email=request.json["email"])).scalars().first()
+    email = request.json.get("email")
+    password = request.json.get("password")
 
-    if user and check_password(request.json["password"], user.password):
+    if not email:
+        return jsonify({"error": "Email is not provided"}), 400
+    if not password:
+        return jsonify({"error": "Password is not provided"}), 400
+
+    session = Session()
+    user = session.execute(select(User).filter_by(email=email)).scalars().first()
+
+    if user and check_password(password, user.password):
         login_user(user)
-        return jsonify({"message": "Logged in successfully"}), 200
+        return jsonify({"status": "Logged in successfully"}), 200
     return jsonify({"error": "Invalid credentials"}), 401
+
+
+@app.route('/api/v1/logout/', methods=['POST'])
+@login_required
+def logout():
+    logout_user()
+    return jsonify({'status': 'logged out'}), 200
 
 
 def get_advertisement_by_id(adv_id: int):
@@ -49,16 +65,21 @@ def delete_advertisement(advertisement: Advertisement):
     request.session.commit()
 
 class AdvertisementView(MethodView):
-
     def get(self, adv_id: int):
         advertisement = get_advertisement_by_id(adv_id)
+        if not advertisement:
+            return jsonify({"error": "advertisement not found"}), 404
         return jsonify(advertisement.dict), 200
 
     @login_required
     def post(self):
         json_data = request.json
+        header = json_data.get("header")
+        description = json_data.get("description") or ""
+        if not header:
+            return jsonify({"error": "header is required"}), 400
         advertisement = Advertisement(
-            header=json_data["header"], description=json_data["description"],
+            header=header, description=description,
             user_id=current_user.get_id()
         )
         add_advertisement(advertisement)
@@ -68,6 +89,10 @@ class AdvertisementView(MethodView):
     def patch(self, adv_id: int):
         json_data = request.json
         advertisement = get_advertisement_by_id(adv_id)
+
+        if not advertisement:
+            return jsonify({"error": "advertisement not found"}), 404
+
         if int(current_user.get_id()) == advertisement.user_id:
             if "header" in json_data:
                 advertisement.header = json_data["header"]
@@ -76,15 +101,17 @@ class AdvertisementView(MethodView):
 
             add_advertisement(advertisement)
             return jsonify(advertisement.id_dict), 201
-        return jsonify({"status": "no permission"}), 403
+        return jsonify({"error": "no permission"}), 403
 
     @login_required
     def delete(self, adv_id: int):
         advertisement = get_advertisement_by_id(adv_id)
+        if not advertisement:
+            return jsonify({"error": "advertisement not found"}), 404
         if int(current_user.get_id()) == advertisement.user_id:
             delete_advertisement(advertisement)
             return jsonify({"status": "success"}), 204
-        return jsonify({"status": "no permission"}), 403
+        return jsonify({"error": "no permission"}), 403
 
 advertisement_view = AdvertisementView.as_view("advertisement_view")
 app.add_url_rule("/api/v1/advertisement/", view_func=advertisement_view, methods=["POST"])

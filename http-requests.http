@@ -10,6 +10,10 @@ Content-Type: application/json
 
 ###
 
+POST {{baseUrl}}/logout/
+
+###
+
 POST {{baseUrl}}/advertisement/
 Content-Type: application/json
 
@@ -35,7 +39,7 @@ Content-Type: application/json
 
 ###
 
-PATCH {{baseUrl}}/advertisement/2
+PATCH {{baseUrl}}/advertisement/3
 Content-Type: application/json
 
 {
@@ -45,7 +49,6 @@ Content-Type: application/json
 ###
 
 GET {{baseUrl}}/advertisement/2
-Content-Type: application/json
 
 ###
 
