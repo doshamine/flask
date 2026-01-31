@@ -11,6 +11,7 @@ paths:
       tags:
         - auth
       description: Авторизация пользователя
+      security: []
       requestBody:
         required: true
         content:
@@ -63,6 +64,8 @@ paths:
       tags:
         - auth
       description: Выход пользователя из сессии
+      security:
+        - BasicAuth: []
       responses:
         200:
           description: Успешный выход
@@ -81,6 +84,8 @@ paths:
       tags:
         - advertisement
       description: Создание объявления
+      security:
+        - BasicAuth: []
       requestBody:
         required: true
         content:
@@ -120,6 +125,7 @@ paths:
       tags:
         - advertisement
       description: Получение объявления по ID
+      security: []
       parameters:
         - in: path
           name: advertisementId
@@ -144,6 +150,8 @@ paths:
       tags:
         - advertisement
       description: Изменение объявления по ID
+      security:
+        - BasicAuth: []
       parameters:
         - in: path
           name: advertisementId
@@ -191,6 +199,8 @@ paths:
       tags:
         - advertisement
       description: Удаление объявления по ID
+      security:
+        - BasicAuth: []
       parameters:
         - in: path
           name: advertisementId
@@ -266,3 +276,7 @@ components:
         error:
           type: string
           example: 'advertisement not found'
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
